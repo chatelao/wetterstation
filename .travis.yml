@@ -3,7 +3,7 @@ sudo: false
 before_install:
   - source <(curl -SLs https://raw.githubusercontent.com/chatelao/travis-ci-arduino/master/install.sh)
 install:
-  - arduino --install-library "Adafruit ESP8266,Adafruit DHT Unified"
+  - arduino --install-library "Phant,Adafruit ESP8266,Adafruit DHT Unified"
 script:
   - build_platform arduino:avr:uno
   - build_platform leonardo
