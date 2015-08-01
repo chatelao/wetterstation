@@ -35,7 +35,7 @@
 //
 // Define connection between Arduino and ESP8266
 //
-#include <Adafruit_ESP8266.h>
+// #include <Adafruit_ESP8266.h>
 
 #define ARD_RX_ESP_TX   10
 #define ARD_TX_ESP_RX   11
@@ -58,19 +58,6 @@ Adafruit_ESP8266 wifi(&softser, &Serial, ESP_RST);
 // hostname, public key, private key
 // http://data.sparkfun.com/streams/g6Mbja4o52IgVRjaY85j
 // "g6Mbja4o52IgVRjaY85j", "qz9lrjWdqkUemWXlpyZX"
-
-#define ESP_SSID "mynetwwork" // Your network name here
-#define ESP_PASS "mysecret"   // Your network password here
-#define PHANT_PUBLIC_KEY "phantpublickey"
-#define PHANT_PRIVAT_KEY "phantprivatekey"
-
-#ifndef ESP8266
-#define DHTPIN  0          // What pin we're connected to
-#else
-#define DHTPIN A1 // DHT-Sensor
-#define DHTVCC A0 // DHT-VCC
-#define DHTGND A3 // DHT-Ground
-#endif
 
 #include "ssids.h"
 
