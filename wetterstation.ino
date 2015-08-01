@@ -35,7 +35,7 @@
 //
 // Define connection between Arduino and ESP8266
 //
-// #include <Adafruit_ESP8266.h>
+#include <Adafruit_ESP8266.h>
 
 #define ARD_RX_ESP_TX   10
 #define ARD_TX_ESP_RX   11
