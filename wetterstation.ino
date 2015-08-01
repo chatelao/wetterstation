@@ -31,21 +31,29 @@
 //     ----------------------
 //
 
-#include "Adafruit_ESP8266.h"
-#include <SoftwareSerial.h>
-
-#define LED_PIN         13
+#ifndef ESP8266
+//
+// Define connection between Arduino and ESP8266
+//
+#include <Adafruit_ESP8266.h>
 
 #define ARD_RX_ESP_TX   10
 #define ARD_TX_ESP_RX   11
 #define ESP_RST         12
+
+#include <SoftwareSerial.h>
 SoftwareSerial softser(ARD_RX_ESP_TX, ARD_TX_ESP_RX); // Arduino RX = ESP TX, Arduino TX = ESP RX
 
 // Must declare output stream before Adafruit_ESP8266 constructor; can be
 // a SoftwareSerial stream, or Serial/Serial1/etc. for UART.
 Adafruit_ESP8266 wifi(&softser, &Serial, ESP_RST);
 
-#include "Phant.h"
+#define LED_PIN         13
+#else
+#include <ESP8266WiFi.h>
+#endif // ESP8266
+
+#include <Phant.h>
 // Arduino example stream
 // hostname, public key, private key
 // http://data.sparkfun.com/streams/g6Mbja4o52IgVRjaY85j
@@ -56,13 +64,18 @@ Adafruit_ESP8266 wifi(&softser, &Serial, ESP_RST);
 #define PHANT_PUBLIC_KEY "phantpublickey"
 #define PHANT_PRIVAT_KEY "phantprivatekey"
 
+#ifndef ESP8266
+#define DHTPIN  0          // What pin we're connected to
+#else
 #define DHTPIN A1 // DHT-Sensor
 #define DHTVCC A0 // DHT-VCC
 #define DHTGND A3 // DHT-Ground
+#endif
 
 #include "ssids.h"
 
-Phant phant("data.sparkfun.com", PHANT_PUBLIC_KEY, PHANT_PRIVAT_KEY);
+const char* host = "data.sparkfun.com";
+Phant phant(host, PHANT_PUBLIC_KEY, PHANT_PRIVAT_KEY);
 
 #include <DHT.h>
 #define DHTTYPE DHT22     // DHT 22  (AM2302)
@@ -92,12 +105,16 @@ void setup() {
 
   char buffer[50];
 
+  Serial.begin(115200); while(!Serial); // UART serial debug
+
+#ifndef ESP8266
   // Flash LED on power-up
   pinMode(LED_PIN, OUTPUT);
   for(uint8_t i=0; i<3; i++) {
     digitalWrite(13, HIGH); delay(50);
     digitalWrite(13, LOW);  delay(100);
   }
+#endif // ESP8266
 
   attachInterrupt(1, countRain, RISING); // Pin 3
   
@@ -110,9 +127,8 @@ void setup() {
   digitalWrite(DHTGND, LOW);
 #endif
 
-
   dht.begin();
-
+#ifndef ESP8266
   // This might work with other firmware versions (no guarantees)
   // by providing a string to ID the tail end of the boot message:
   
@@ -120,8 +136,26 @@ void setup() {
   wifi.setBootMarker(F("Version:0.9.2.4]\r\n\r\nready"));
 
   softser.begin(9600); // Soft serial connection to ESP8266
-  Serial.begin(57600); while(!Serial); // UART serial debug
-
+#else
+  // We start by connecting to a WiFi network
+ 
+  Serial.println();
+  Serial.println();
+  Serial.print("Connecting to ");
+  Serial.println(ESP_SSID);
+  
+  WiFi.begin(ESP_SSID, ESP_PASS);
+  
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+ 
+  Serial.println("");
+  Serial.println("WiFi connected");  
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+#endif
 }
 
 void loop() {
@@ -145,6 +179,7 @@ void loop() {
 #endif
   phant.add(F("timestamp"),"");
 
+#ifndef ESP8266
    wifi.hardReset();
    wifi.softReset();   
    wifi.connectToAP(F(ESP_SSID), F(ESP_PASS));
@@ -157,9 +192,36 @@ void loop() {
    } else {
      Serial.println(F("TCP send failed"));
    }
-
    wifi.closeTCP();
    wifi.closeAP();
+#else
+  String url = (char*)phant.url().substring(7+17).c_str();
+  Serial.print("Requesting URL: ");
+  Serial.println(url);
+  
+   // Use WiFiClient class to create TCP connections
+  WiFiClient client;
+  if (!client.connect(host, 80)) {
+    Serial.println("connection failed");
+    return;
+  }
+  
+  String request = "GET " + url + " HTTP/1.1\r\n" +
+                   "Host: " + host + "\r\n" + 
+                   "Connection: close\r\n\r\n";
+                   
+  Serial.println(request);
+  
+  // This will send the request to the server
+  client.print(request);
+  delay(10);
+  
+  // Read all the lines of the reply from server and print them to Serial
+  while(client.available()){
+    String line = client.readStringUntil('\r');
+    Serial.print(line);
+  }
+#endif
 
   Serial.print(F("end of cycle "));
   Serial.println(cycle++);
