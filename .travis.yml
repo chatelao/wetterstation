@@ -4,11 +4,11 @@ before_install:
   - source <(curl -SLs https://raw.githubusercontent.com/chatelao/travis-ci-arduino/master/install.sh)
 install:
   - arduino --install-library "Phant"
-  - arduino --install-library "Adafruit ESP8266"
+# - arduino --install-library "Adafruit ESP8266"
   - arduino --install-library "DHT sensor library"
 script:
-  - build_platform uno
-  - build_platform leonardo
+# - build_platform uno
+# - build_platform leonardo
   - build_platform esp8266
 notifications:
   email:
