@@ -5,9 +5,9 @@ before_install:
 install:
   - arduino --install-library "Phant,Adafruit ESP8266,Adafruit DHT Unified"
 script:
-  - build_platform arduino:avr:uno
+  - build_platform uno
   - build_platform leonardo
-  - build_platform esp8266:esp8266:nodemcu
+  - build_platform esp8266
 notifications:
   email:
     on_success: change
